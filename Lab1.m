@@ -109,6 +109,43 @@ RPM_T12_Sensor = (1/period) * 60;
 
 %% change in volume
 
-Cylinder_Volume = pi*(RCylinder*10^-3)^2 * HCylinder;
-Foam_Volume = pi*(RFoam*10^-3)^2 * HFoam;
+Cylinder_Volume = pi*(RCylinder*10^-3)^2 * HCylinder*10^-3;
+Foam_Volume = pi*(RFoam*10^-3)^2 * HFoam*10^-3;
+
+V1 = Cylinder_Volume - Foam_Volume;
+
+% we will use piston displacement to compute the change in volume
+% we will thus zero the initial displacement,
+
+% the zero point is when the piston is at the bottome, so we will make the
+% max position equatl to 0.
+
+PistonDisp_callibrated = PistonDisp(:,3) - min(PistonDisp(:,3)) ; 
+% min here will give the maximum in negartive.
+
+% Change in volume
+DV = (PistonDisp_callibrated)*10^-3 * (pi*(RPiston*10^-3)^2);
+
+% now to get the volume at any given point by adding V1 to DV.
+
+% one cycle is sufficient,
+
+V2 = max(DV) + V1 ;
+
+%% work: info
+
+
+% 1 -> 2 : Isobaric Heating
+% 2 -> 3 : Isothermal expansion
+% 3 -> 4 : Isobaric cooling
+% 4 -> 1 : Isothermal compression
+
+
+%% Work: idealized case
+
+% there are 4 processes
+
+
+
+W12 = 0;
 
