@@ -14,8 +14,12 @@ HFoam = 11; % mm , height of foam.
 Cylinder_Volume = pi*(RCylinder*10^-3)^2 * HCylinder*10^-3;
 Foam_Volume = pi*(RFoam*10^-3)^2 * HFoam*10^-3;
 R_air = 0.287; % (KJ / Kg-K)
+gamma_air = 1.4 ; % cv/cp
 Cp_air = 1.005 ; % KJ/(Kg*K)
 Cv_air = 0.718 ; % KJ/(Kg*K)
+Cv_Air = R_air / (gamma_air - 1) ;
+
+
 %% info:
 
 
@@ -155,7 +159,7 @@ V2 = max(DV) + V1 ;
 % -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 m_air = ( max((T8(:,2)*6.89476)) .* min((V1+DV)) ) ./ ( R_air .* max(( T8(:,4) + T8(:,5))./2)+273.15); % PV / RT
-
+m_air = 9;
 
 % 1 -> 2 :
 
@@ -183,3 +187,7 @@ Qnet_34_8 = -m_air*Cv_air*((8+273)) ;
 W41_8 =  m_air*R_air*(min(( T8(:,4) + T8(:,5))./2)+273.15)*log(V1/V2);
 Qnet_41_8 = -1*m_air*Cv_air*((8+273)) ;
 
+
+%% themral efficiency: 
+
+((W23_8 + W41_8)/(Qnet_12_8+Qnet_23_8))*100
