@@ -11,8 +11,11 @@ RFoam = 70 ; % in mm
 RPiston = 7.5 ; % in mm
 HCylinder = 21; %mm % height of cylinder
 HFoam = 11; % mm , height of foam.
-
-
+Cylinder_Volume = pi*(RCylinder*10^-3)^2 * HCylinder*10^-3;
+Foam_Volume = pi*(RFoam*10^-3)^2 * HFoam*10^-3;
+R_air = 0.287; % (KJ / Kg-K)
+Cp_air = 1.005 ; % KJ/(Kg*K)
+Cv_air = 0.718 ; % KJ/(Kg*K)
 %% info:
 
 
@@ -109,8 +112,6 @@ RPM_T12_Sensor = (1/period) * 60;
 
 %% change in volume
 
-Cylinder_Volume = pi*(RCylinder*10^-3)^2 * HCylinder*10^-3;
-Foam_Volume = pi*(RFoam*10^-3)^2 * HFoam*10^-3;
 
 V1 = Cylinder_Volume - Foam_Volume;
 
@@ -146,6 +147,39 @@ V2 = max(DV) + V1 ;
 % there are 4 processes
 
 
+% 4th column is bottom of top face, and 5th is top of bottom, we're taking
+% the average temp.
 
-W12 = 0;
+% note: *6.89476 is to convert from psi to kpa.
+
+% -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+m_air = ( max((T8(:,2)*6.89476)) .* min((V1+DV)) ) ./ ( R_air .* max(( T8(:,4) + T8(:,5))./2)+273.15); % PV / RT
+
+
+% 1 -> 2 :
+
+W12_8 = 0;
+Qnet_12_8 = m_air*Cv_air*((8+273)) ;
+
+% -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+% 2 -> 3 :
+
+W23_8 = m_air*R_air*(max(( T8(:,4) + T8(:,5))./2)+273.15)*log(V2/V1) ;
+Qnet_23_8 = W23_8 ;
+
+% -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+% 3 -> 4 :
+
+W34_8 = 0 ;
+Qnet_34_8 = -m_air*Cv_air*((8+273)) ;
+
+% -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+% 4 -> 1 :
+
+W41_8 =  m_air*R_air*(min(( T8(:,4) + T8(:,5))./2)+273.15)*log(V1/V2);
+Qnet_41_8 = -1*m_air*Cv_air*((8+273)) ;
 
