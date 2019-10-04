@@ -164,7 +164,7 @@ m_air = 9;
 % 1 -> 2 :
 
 W12_8 = 0;
-Qnet_12_8 = m_air*Cv_air*((8+273)) ;
+Qnet_12_8 = m_air*Cv_air*((8)) ;
 
 % -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -178,16 +178,35 @@ Qnet_23_8 = W23_8 ;
 % 3 -> 4 :
 
 W34_8 = 0 ;
-Qnet_34_8 = -m_air*Cv_air*((8+273)) ;
+Qnet_34_8 = -m_air*Cv_air*((8)) ;
 
 % -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 % 4 -> 1 :
 
 W41_8 =  m_air*R_air*(min(( T8(:,4) + T8(:,5))./2)+273.15)*log(V1/V2);
-Qnet_41_8 = -1*m_air*Cv_air*((8+273)) ;
+Qnet_41_8 = W41_8 ;
 
 
-%% themral efficiency: 
-
+% themral efficiency: 
 ((W23_8 + W41_8)/(Qnet_12_8+Qnet_23_8))*100
+
+
+% ideal efficiency from stilring
+
+T1 = (min(( T8(:,4) + T8(:,5))./2)+273.15);
+T2 = T1;
+
+T3 = (max(( T8(:,4) + T8(:,5))./2)+273.15);
+T4 = T3;
+
+
+
+
+nth = ( T3 - T1 ) / ( T3 + (( Cv_Air *( T3 - T2 ) ) / R_air*log(V2/V1) ) ) ;
+
+%% actual stirling engine:
+
+% using pressure data from experimental and volume from Solidworks model:
+
+%scatter([linspace(V1,V2,length(w))],[
