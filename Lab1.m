@@ -40,8 +40,26 @@ HoleAngularDisp = xlsread('Data/Hole angular Displacement.xlsx'); % angular disp
 PistonDisp = xlsread('Data/Small Bottom Face Disp.xlsx'); %displacement of Bottom face of the piston.
 
 
-% form Vi: engine was tested with 3 different temprature differences 8 10
-% 12
+%FoamDisp_ = xlsread('Data/RPM_Data/Big Lin Disp at CG.xlsx'); % displacement of foam inside controlled volume
+%HoleAngularDisp = xlsread('Data/RPM_Data/Hole angular Displacement.xlsx'); % angular displacement of the hole on the fly wheel 
+PistonDisp_8 = xlsread('Data/RPM_Data/SmallBottom96.xlsx'); %displacement of Bottom face of the piston.
+
+% zero data:
+
+PistonDisp_8(:,3) = PistonDisp_8(:,3) - min(PistonDisp_8(:,3));
+
+% make sure that we start from displacement = 0:
+
+j = find(PistonDisp_8(:,3)==min(PistonDisp_8(:,3))); % 
+PistonDisp_8(1:j-1,:) = [];
+
+% zero time
+
+PistonDisp_8(:,2) = PistonDisp_8(:,2) - (PistonDisp_8(1,2));
+
+
+% form Vi: engine was tested with 3 different temprature differences
+% 8 10 12
 
 T8 = load('8degrees_engine3');
 T10 = load('10degrees_engine3');
@@ -62,7 +80,10 @@ RPM_CAD = frequency * 60 ;
 % this RPM matches what we have inputted for solidworks, which is 100;
 
 %% RPM from pressure change
-% this's for arctual text.
+% this's for actual experiment.
+
+
+%{
 
 
 % RPM for when temp difference is 8
@@ -87,8 +108,11 @@ frequency = 1/period;
 RPM_T12_Pressure = frequency * 60 ;
 
 
+%}
+
 %% RPM from Sensors
 
+% there's optical sensor that checks when the 
 T8_Pass = find(T8(:,8)==1); % see when the wheel passes at the optic, it'll be 1
 T10_Pass = find(T10(:,8)==1); % see when the wheel passes at the optic, it'll be 1
 T12_Pass = find(T12(:,8)==1); % see when the wheel passes at the optic, it'll be 1
@@ -102,7 +126,12 @@ find_T10 = find_T10 + 1;
 find_T12 = find_T12 + 1;
 
 
-period = T8(T8_Pass(find_T8(2),1)) - T8(T8_Pass(find_T8(1),1));
+
+% those fin_T8, T10, T10 are the two indices, which are the indices that
+% represent the beggining and end of the cycle. from them we can get
+% period, and information about all the cyclces.
+
+period = T8(T8_Pass(find_T8(2)),1) - T8(T8_Pass(find_T8(1)),1);
 RPM_T8_Sensor = (1/period) * 60;
 
 period = T10(T10_Pass(find_T10(2),1)) - T10(T10_Pass(find_T10(1),1));
@@ -136,6 +165,68 @@ DV = (PistonDisp_callibrated)*10^-3 * (pi*(RPiston*10^-3)^2);
 % one cycle is sufficient,
 
 V2 = max(DV) + V1 ;
+
+%% calibrating two data's
+
+% the issue is that experimntal data isn't the same frequency as the actual
+% data.
+
+% we can figure out how much time it takes for one cycle from the rpm data,
+% this should be the same for both CAD model and Experiment.
+
+% get time it took for one cycle:
+
+
+% col 1 is time:
+Start_t_8 = 0;
+End_t_8 = T8(T8_Pass(find_T8(2),1)) - T8(T8_Pass(find_T8(1),1)); % Time of each cycle is constant so we can assume we start from 0 and go to 0 + dt.
+
+Start_t_10 = 0;
+End_t_10 = T10(T10_Pass(find_T10(2),1)) - T10(T10_Pass(find_T10(1),1));
+
+Start_t_12 = 0;
+End_t_12 = T12(T12_Pass(find_T12(2),1)) - T12(T12_Pass(find_T12(1),1));
+
+
+% pull out all data realted to this time period between the start and the
+% end, it'll not be the same length, so we will need to pull that to adjust
+% it
+
+i = knnsearch(PistonDisp_8(:,2),End_t_8); % find where times are the same.
+
+
+Volume_8 = V1 + PistonDisp_8(1:i,3)*10^-3 * (pi*(RPiston*10^-3)^2) ;
+t_Volume_8 = PistonDisp_8(1:i,2);
+
+
+Pressure_8 = T8(T8_Pass(find_T8(1)):T8_Pass(find_T8(2)),2)  ; 
+Pressure_8 = Pressure_8 + 12 ; % add atmospheric pressur in psi
+Pressure_8 = Pressure_8* 6894.76 ; % convert to Pa
+Pressure_8 = Pressure_8;
+
+
+
+t_Pressure_8 = T8(T8_Pass(find_T8(1)):T8_Pass(find_T8(2)),1) ;
+t_Pressure_8 = t_Pressure_8 - t_Pressure_8(1) ; 
+Volume_8_interp = interp1(t_Volume_8,Volume_8,t_Pressure_8);
+
+scatter(Volume_8_interp,Pressure_8)
+grid minor
+xlabel('Volume [m^3]');
+ylabel('Pressure [Pa]');
+title(['PV diagram for T = 8' char(176) ' C stirling engine'])
+
+ 
+hi = 0;
+
+
+
+% now make them the same size:
+
+
+
+
+
 
 %% work: info
 
@@ -189,7 +280,7 @@ Qnet_41_8 = W41_8 ;
 
 
 % themral efficiency: 
-((W23_8 + W41_8)/(Qnet_12_8+Qnet_23_8))*100
+% ((W23_8 + W41_8)/(Qnet_12_8+Qnet_23_8))*100
 
 
 % ideal efficiency from stilring
@@ -203,7 +294,8 @@ T4 = T3;
 
 
 
-nth = ( T3 - T1 ) / ( T3 + (( Cv_Air *( T3 - T2 ) ) / R_air*log(V2/V1) ) ) ;
+nth_ideal = ( T3 - T1 ) / ( T3 + (( Cv_Air *( T3 - T2 ) ) / R_air*log(V2/V1) ) ) * 100 
+nth_actual = ( trapz(Volume_8_interp(1:1020),Pressure_8(1:1020)) ./ (Qnet_12_8+Qnet_23_8) ) * 100  
 
 %% actual stirling engine:
 
