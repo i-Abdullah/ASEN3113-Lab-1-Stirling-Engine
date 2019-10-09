@@ -67,9 +67,7 @@ PistonDisp_12(1:j-1,:) = [];
 % zero time
 
 PistonDisp_8(:,2) = PistonDisp_8(:,2) - (PistonDisp_8(1,2));
-
 PistonDisp_10(:,2) = PistonDisp_10(:,2) - (PistonDisp_10(1,2));
-
 PistonDisp_12(:,2) = PistonDisp_12(:,2) - (PistonDisp_12(1,2));
 
 
@@ -93,6 +91,31 @@ frequency = 1/period;
 RPM_CAD = frequency * 60 ;
 
 % this RPM matches what we have inputted for solidworks, which is 100;
+
+
+% check that for other tempratures?
+
+plot(PistonDisp_8(:,2),PistonDisp_8(:,3));
+[x y] = ginput(2);
+period = x(2) - x(1);
+frequency = 1/period;
+RPM_CAD_8 = frequency * 60 ;
+
+
+plot(PistonDisp_10(:,2),PistonDisp_10(:,3));
+[x y] = ginput(2);
+period = x(2) - x(1);
+frequency = 1/period;
+RPM_CAD_10 = frequency * 60 ;
+
+
+plot(PistonDisp_12(:,2),PistonDisp_12(:,3));
+[x y] = ginput(2);
+period = x(2) - x(1);
+frequency = 1/period;
+RPM_CAD_12 = frequency * 60 ;
+
+
 
 %% RPM from pressure change
 % this's for actual experiment.
